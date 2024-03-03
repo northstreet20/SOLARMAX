@@ -52,7 +52,7 @@ def thread_heartbeat(config):
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='Personal information')
-    parser.add_argument('--config', dest='configfile', type=str, help='path of configfile', default="./solarmax.cfg")
+    parser.add_argument('--config', dest='configfile', type=str, help='path of configfile', default="./data/solarmax.cfg")
     args = parser.parse_args()
     print(f"default environment is: working-directory={os.getcwd()}, configfile={args.configfile}")
 

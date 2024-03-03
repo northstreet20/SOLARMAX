@@ -2,17 +2,20 @@ version: '3.8'
 
 services:
 
-  solarmax-mqtt:
+  solarmax:
     image: northstreet/solarmax:rpi_arm6
-    #image: northstreet/solarmax:latest
     container_name: solarmax_container
     restart: always
     ports:
       - 8088:8088
+      - 1883:1883
     volumes:
-      - /home/admin/solarmax-mqtt:/home/appuser/data
+      - /home/admin/solarmax:/home/appuser/data
 
     command: python3 /home/appuser/app/main.py
+
+    networks:
+      - backend
 
 networks:
   backend:

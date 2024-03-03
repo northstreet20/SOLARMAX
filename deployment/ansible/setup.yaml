@@ -28,14 +28,20 @@
     - name: pull docker image / images for git are pulled by docker-compose
       become: true
       docker_image:
-        name: northstreet/solarmax:latest
+        name: northstreet/solarmax:rpi_arm6
         source: pull
 
     - name: copy docker-compose.yaml to remote
       become: true
       copy:
-        src: "./raspi5/docker-compose.yml"
+        src: "./../raspi5/docker-compose.yml"
         dest: "{{ app_folder_path }}/docker-compose.yml"
+
+    - name: copy config to remote
+      become: true
+      copy:
+        src: "./../raspi5/solarmax.cfg"
+        dest: "{{ app_folder_path }}/solarmax.cfg"
 
     - name: Create service file
       become: yes
@@ -47,14 +53,14 @@
           [Unit]
           Description=Solarmax Log Service
           Requires=docker.service
-          After=network-online.target network.target
+          After=network-online.target docker.service
           [Service]
           Type=oneshot
           RemainAfterExit=yes
           WorkingDirectory=/home/admin/solarmax
           ExecStart=docker compose up -d
           ExecStop=docker compose down
-          TimeoutStartSec=0
+          TimeoutStartSec=5
           [Install]
           WantedBy=multi-user.target
 
@@ -63,12 +69,10 @@
       systemd:
         daemon-reload: yes
 
-    - name: Enable the influxdb service and start
+    - name: Enable the solarmax service and start
       become: yes
       systemd:
-        name: solarmax-mqtt
+        name: solarmax
         enabled: yes
         state: started
-
-
 
