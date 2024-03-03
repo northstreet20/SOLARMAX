@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+
+  solarmax-mqtt:
+    image: northstreet/solarmax:rpi_arm6
+    #image: northstreet/solarmax:latest
+    container_name: solarmax_container
+    restart: always
+    ports:
+      - 8088:8088
+    volumes:
+      - /home/admin/solarmax-mqtt:/home/appuser/data
+
+    command: python3 /home/appuser/app/main.py
+
+networks:
+  backend:
+    name: network_solarsmart
+    external: true

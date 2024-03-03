@@ -1,0 +1,74 @@
+- name: install solarmax-mqtt
+  hosts: all
+  become: yes
+  become_user: root
+  vars:
+    current_user: "{{ lookup('env', 'USER') }}"
+    remote_user: admin
+    app_folder: solarmax
+    app_folder_path: "/home/{{ remote_user }}/{{ app_folder }}"
+    docker_network_name: network_solarsmart
+
+  tasks:
+
+    - name: make docker network
+      become: yes
+      docker_network:
+        name: "{{ docker_network_name }}"
+        driver: bridge
+
+    - name: make app folder
+      become: true
+      file:
+        path: "{{ app_folder_path }}"
+        state: directory
+        owner: "{{ remote_user }}"
+        mode: 0775
+
+    - name: pull docker image / images for git are pulled by docker-compose
+      become: true
+      docker_image:
+        name: northstreet/solarmax:latest
+        source: pull
+
+    - name: copy docker-compose.yaml to remote
+      become: true
+      copy:
+        src: "./raspi5/docker-compose.yml"
+        dest: "{{ app_folder_path }}/docker-compose.yml"
+
+    - name: Create service file
+      become: yes
+      copy:
+        dest: "/etc/systemd/system/solarmax.service"
+        owner: root
+        group: root
+        content: |
+          [Unit]
+          Description=Solarmax Log Service
+          Requires=docker.service
+          After=network-online.target network.target
+          [Service]
+          Type=oneshot
+          RemainAfterExit=yes
+          WorkingDirectory=/home/admin/solarmax
+          ExecStart=docker compose up -d
+          ExecStop=docker compose down
+          TimeoutStartSec=0
+          [Install]
+          WantedBy=multi-user.target
+
+    - name: Reload the SystemD to re-read configurations
+      become: yes
+      systemd:
+        daemon-reload: yes
+
+    - name: Enable the influxdb service and start
+      become: yes
+      systemd:
+        name: solarmax-mqtt
+        enabled: yes
+        state: started
+
+
+
